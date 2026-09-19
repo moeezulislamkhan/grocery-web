@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Status — ShakarGanj</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=3">
+<style>
+  body{ background:var(--paper); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .oc-card{ background:var(--white); border-radius:22px; padding:40px; max-width:440px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.12); text-align:center; }
+  .oc-icon{ font-size:44px; margin-bottom:14px; }
+  .oc-card h2{ font-size:21px; margin-bottom:6px; }
+  .oc-card .sub{ font-size:13px; color:var(--ink-soft); margin-bottom:20px; }
+  .oc-code{ font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600; color:var(--maroon); background:var(--maroon-tint); display:inline-block; padding:8px 16px; border-radius:10px; margin-bottom:20px; }
+  .oc-status{ display:inline-block; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:22px; }
+  .oc-status.paid{ background:#E7F3EC; color:var(--green); }
+  .oc-status.pending{ background:#FDF1E0; color:var(--gold); }
+  .oc-status.failed{ background:#FBEAEA; color:#B3261E; }
+  .oc-status.cod_pending{ background:#FDF1E0; color:var(--gold); }
+</style>
+</head>
+<body>
+  <div class="oc-card">
+    <div class="oc-icon" id="ocIcon">⏳</div>
+    <h2 id="ocTitle">Checking your order…</h2>
+    <div class="sub" id="ocSub">One moment while we confirm your payment status.</div>
+    <div class="oc-code" id="ocCode">—</div><br>
+    <span class="oc-status pending" id="ocStatus">pending</span>
+    <div>
+      <a class="btn ghost small" href="index.html">Back to store</a>
+    </div>
+  </div>
+
+<script src="js/api.js?v=3"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const orderCode = params.get('order');
+const cancelled = params.get('cancelled');
+
+async function poll(attempts = 0) {
+  if (cancelled) {
+    document.getElementById('ocIcon').textContent = '↩️';
+    document.getElementById('ocTitle').textContent = 'Checkout cancelled';
+    document.getElementById('ocSub').textContent = 'You can go back and try a different payment method.';
+    document.getElementById('ocCode').textContent = orderCode || '—';
+    document.getElementById('ocStatus').textContent = 'cancelled';
+    document.getElementById('ocStatus').className = 'oc-status failed';
+    return;
+  }
+  try {
+    const { order } = await API.get(`/api/orders/${orderCode}`);
+    document.getElementById('ocCode').textContent = order.order_code;
+    document.getElementById('ocStatus').textContent = order.payment_status;
+    document.getElementById('ocStatus').className = 'oc-status ' + order.payment_status;
+    if (order.payment_status === 'paid') {
+      document.getElementById('ocIcon').textContent = '✅';
+      document.getElementById('ocTitle').textContent = 'Payment successful!';
+      document.getElementById('ocSub').textContent = 'Your order is confirmed and on its way to being packed.';
+      return;
+    }
+    if (order.payment_status === 'failed') {
+      document.getElementById('ocIcon').textContent = '❌';
+      document.getElementById('ocTitle').textContent = 'Payment failed';
+      document.getElementById('ocSub').textContent = 'Your payment could not be completed. Please try again from your cart.';
+      return;
+    }
+    if (order.payment_status === 'cod_pending') {
+      document.getElementById('ocIcon').textContent = '📦';
+      document.getElementById('ocTitle').textContent = 'Order confirmed';
+      document.getElementById('ocSub').textContent = 'Pay cash when your order arrives at your door.';
+      return;
+    }
+    // still pending — the webhook may not have landed yet; poll a few times
+    if (attempts < 10) {
+      setTimeout(() => poll(attempts + 1), 1500);
+    } else {
+      document.getElementById('ocTitle').textContent = 'Still confirming…';
+      document.getElementById('ocSub').textContent = 'This is taking longer than usual. Refresh this page in a moment, or contact support with your order code.';
+    }
+  } catch (err) {
+    document.getElementById('ocTitle').textContent = 'Could not load order';
+    document.getElementById('ocSub').textContent = err.message || 'Please contact support with your order code.';
+  }
+}
+poll();
+</script>
+</body>
+</html>

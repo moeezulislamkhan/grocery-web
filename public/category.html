@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop by Category — ShakarGanj Grocery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+
+<div id="app" class="ready" style="display:block;">
+  <div class="topbar">Free delivery on orders above Rs. 2,000 &nbsp;•&nbsp; Pay via JazzCash, Bank Transfer or Cash on Delivery</div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" style="cursor:pointer;">
+        <div class="mark"><img src="assets/logo.jpg" alt="ShakarGanj"></div>
+        <div class="name">ShakarGanj<span>GROCERY STORE</span></div>
+      </a>
+      <div class="searchbar">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="categorySearchInput" placeholder="Search within this category...">
+      </div>
+      <div class="header-actions">
+        <a class="icon-btn" href="login.html" id="accountLink">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          <span id="accountLabel">Sign In</span>
+        </a>
+        <button class="icon-btn" onclick="toggleCart(true)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+          <span>Cart</span>
+          <span class="badge" id="cartBadge" style="display:none;">0</span>
+        </button>
+      </div>
+    </div>
+    <nav class="catnav">
+      <div class="catnav-inner" id="catNavInner">
+        <a href="index.html">All Categories</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="section" style="padding-bottom:0;">
+    <div class="eyebrow" id="categoryBreadcrumb" style="margin-bottom:6px;">Shop &rsaquo; Category</div>
+    <h1 id="categoryTitle" style="font-size:clamp(26px,4vw,38px);">Category</h1>
+    <p id="categoryCount" style="color:var(--ink-soft); font-size:13.5px; margin-top:6px;">Loading…</p>
+  </section>
+
+  <!-- Category "containers" row — every category as its own selectable card, matching the homepage's Shop-by-Category style, so switching categories never means going back to Home first. -->
+  <section class="section" style="padding-top:22px; padding-bottom:0;">
+    <div class="cat-grid" id="categoryPicker"><p class="empty-note">Loading categories…</p></div>
+  </section>
+
+  <section class="section" id="categoryProductsSection">
+    <div class="product-grid" id="categoryProductGrid"><p class="empty-note">Loading products…</p></div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <div id="footerStoreName" style="color:#fff; font-family:'Fraunces',serif; font-weight:700; font-size:19px;">ShakarGanj</div>
+        <p style="font-size:12.5px; margin-top:10px; line-height:1.7; max-width:260px;">Your trusted neighbourhood grocery store, now online. Fresh produce and daily essentials delivered across the city.</p>
+        <div class="pay-icons">
+          <span>JazzCash</span><span>Bank Transfer</span><span>Cash on Delivery</span>
+        </div>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul id="footerShopList"><li>Fruits &amp; Vegetables</li><li>Dairy &amp; Eggs</li><li>Bakery</li><li>Beverages</li></ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul><li>Track Order</li><li>Delivery Info</li><li>Returns</li><li>Contact Us</li></ul>
+        <h4 class="footer-policy-heading">Policies</h4>
+        <ul class="footer-policy-links"><li><a href="terms.html">Terms &amp; Conditions</a></li><li><a href="payment-policy.html">Payment Policy</a></li><li><a href="refund-policy.html">Refund Policy</a></li><li><a href="privacy-policy.html">Privacy Policy</a></li></ul>
+      </div>
+      <div>
+        <h4>Get in touch</h4>
+        <ul><li id="footerPhone">+92 300 1234567</li><li>orders@shakarganj.pk</li><li>Lahore, Pakistan</li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 <span id="footerCopyrightName">ShakarGanj Grocery Store</span>. All rights reserved.</div>
+  </footer>
+</div>
+
+<!-- CART DRAWER -->
+<div id="overlay" onclick="toggleCart(false); closeCheckout();"></div>
+<div id="cartDrawer">
+  <div class="cart-head"><h3>Your Cart</h3><button onclick="toggleCart(false)">✕</button></div>
+  <div class="cart-items" id="cartItemsWrap"></div>
+  <div class="cart-foot" id="cartFoot" style="display:none;">
+    <div class="totals-row"><span>Subtotal</span><span id="cartSubtotal">Rs. 0</span></div>
+    <div class="totals-row"><span>Delivery</span><span id="cartDelivery">Rs. 0</span></div>
+    <div class="totals-row grand"><span>Total</span><span id="cartTotal">Rs. 0</span></div>
+    <button class="btn" onclick="openCheckout()">Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-mask" id="checkoutModal">
+  <div class="modal-box">
+    <button class="close-x" onclick="closeCheckout()">✕</button>
+    <h2>Checkout</h2>
+    <div class="checkout-grid">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px;">Delivery details</div>
+        <div class="field-row">
+          <div class="field"><label>Full name</label><input type="text" id="coName" placeholder="Ahmed Khan"></div>
+          <div class="field"><label>Phone</label><input type="text" id="coPhone" placeholder="03xx-xxxxxxx"></div>
+        </div>
+        <div class="field"><label>Delivery address</label><textarea id="coAddress" rows="2" placeholder="House #, street, sector, city"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label>City</label><select id="coCity"><option value="Lahore">Lahore</option></select></div>
+          <div class="field"><label>Delivery slot</label><select id="coSlot"><option>Today, 4–7 PM</option><option>Tomorrow, 10 AM–1 PM</option></select></div>
+        </div>
+
+        <div class="eyebrow" style="margin:20px 0 10px;">Payment method</div>
+        <div class="pay-options" id="payOptions">
+          <div class="pay-opt selected" data-pay="jazzcash" onclick="selectPay('jazzcash')">
+            <div class="pi" style="background:#DA1C5C;">JC</div>
+            <div><div class="pt">JazzCash</div><div class="ps">Mobile wallet &amp; card — secure checkout</div></div>
+          </div>
+          <div class="pay-detail">You'll be redirected to JazzCash's own secure Hosted Checkout Page to pay with your wallet or card — your PIN and card details never touch our servers.</div>
+
+          <div class="pay-opt" data-pay="bank" onclick="selectPay('bank')">
+            <div class="pi" style="background:#620014;">BT</div>
+            <div><div class="pt">Bank Transfer</div><div class="ps">Direct bank deposit / IBFT</div></div>
+          </div>
+          <div class="pay-detail" id="checkoutBankDetails">Account title: ShakarGanj Grocery Store. Bank: Meezan Bank. IBAN: PK00 MEZN 0000 0000 1234 567.</div>
+
+          <div class="pay-opt" data-pay="cod" onclick="selectPay('cod')">
+            <div class="pi" style="background:#3B3B3B;">₨</div>
+            <div><div class="pt">Cash on Delivery</div><div class="ps">Pay in cash when your order arrives</div></div>
+          </div>
+          <div class="pay-detail">Keep exact change ready if possible. Our rider will collect payment at the time of delivery.</div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow">Order summary</div>
+        <div class="order-summary">
+          <div id="checkoutItemsList"></div>
+          <div class="totals-row"><span>Subtotal</span><span id="coSubtotal">Rs. 0</span></div>
+          <div class="totals-row"><span>Delivery fee</span><span id="coDelivery">Rs. 0</span></div>
+          <div class="totals-row grand"><span>Total due</span><span id="coTotal">Rs. 0</span></div>
+        </div>
+        <button class="btn" style="width:100%; margin-top:16px;" onclick="placeOrder()" id="placeOrderBtn">Place Order — Pay via JazzCash</button>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-top:10px; text-align:center;" id="payNote">🔒 You'll be redirected to JazzCash's secure checkout page to complete payment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js?v=5"></script>
+<script src="js/support-widget.js?v=5"></script>
+<script src="js/category.js?v=5"></script>
+</body>
+</html>

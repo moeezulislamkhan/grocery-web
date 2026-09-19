@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — ShakarGanj</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=3">
+</head>
+<body>
+
+<div class="admin-login-wrap">
+  <div class="admin-login-card">
+    <div class="abrand"><img src="assets/logo.jpg" alt="logo" style="border-radius:50%;"><b>ShakarGanj</b></div>
+
+    <div class="sp-tabs" style="margin-bottom:22px;">
+      <button id="tabLoginBtn" class="active" onclick="switchTab('login')">Sign In</button>
+      <button id="tabRegisterBtn" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <h2>Welcome back</h2>
+      <div class="sub">One account, one sign-in — we'll take you to the right place automatically.</div>
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn" style="width:100%; margin-top:8px;" onclick="doLogin()">Sign in securely</button>
+      <div class="login-err" id="loginErr"></div>
+      <div class="seed-creds">
+        Demo accounts:<br>
+        shakarganj@gmail.com / 11223344 (Admin Panel)<br>
+        customer@shakarganj.pk / Customer@123 (User Panel)
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerForm" style="display:none;">
+      <h2>Create your account</h2>
+      <div class="sub">For shopping and tracking your orders — takes a few seconds.</div>
+      <div class="field"><label>Full name</label><input type="text" id="regName" placeholder="Ahmed Khan"></div>
+      <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="At least 8 characters" autocomplete="new-password"></div>
+      <button class="btn" style="width:100%; margin-top:8px;" onclick="doRegister()">Create account</button>
+      <div class="login-err" id="registerErr"></div>
+    </div>
+
+    <div class="helper"><a href="index.html" style="color:var(--maroon); font-weight:700;">← Back to storefront</a></div>
+  </div>
+</div>
+
+<script src="js/api.js?v=3"></script>
+<script>
+// Where each role lands after a successful sign-in. This is the ONLY branch
+// point in the whole app — there is no separate "admin login" anywhere.
+const ROLE_DESTINATIONS = {
+  admin: 'admin.html',
+  manager: 'admin.html',
+  staff: 'admin.html',
+  employee: 'admin.html',
+  user: 'user-dashboard.html',
+};
+
+// If already signed in, skip straight to the right panel.
+(function redirectIfLoggedIn() {
+  const user = API.user();
+  if (user && API.token() && ROLE_DESTINATIONS[user.role]) {
+    location.href = ROLE_DESTINATIONS[user.role];
+  }
+})();
+
+function switchTab(tab) {
+  document.getElementById('tabLoginBtn').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegisterBtn').classList.toggle('active', tab === 'register');
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errBox = document.getElementById('loginErr');
+  errBox.style.display = 'none';
+  if (!email || !password) { errBox.textContent = 'Please enter your email and password.'; errBox.style.display = 'block'; return; }
+  try {
+    const { token, user } = await API.post('/api/auth/login', { email, password });
+    API.setToken(token);
+    API.setUser(user);
+    // Backend decided the role — frontend just follows it. This is the
+    // "Admin Email + Password → Backend Authentication → Admin Role →
+    // Admin Panel" (and the equivalent for users) flow, in one place.
+    location.href = ROLE_DESTINATIONS[user.role] || 'index.html';
+  } catch (err) {
+    errBox.textContent = err.message || 'Invalid email or password.';
+    errBox.style.display = 'block';
+  }
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPass').value;
+  const errBox = document.getElementById('registerErr');
+  errBox.style.display = 'none';
+  if (!name || !email || !password) { errBox.textContent = 'Please fill in every field.'; errBox.style.display = 'block'; return; }
+  try {
+    const { token, user } = await API.post('/api/auth/register', { name, email, password });
+    API.setToken(token);
+    API.setUser(user);
+    location.href = ROLE_DESTINATIONS[user.role] || 'index.html'; // new accounts are always role 'user'
+  } catch (err) {
+    errBox.textContent = err.message || 'Could not create your account.';
+    errBox.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

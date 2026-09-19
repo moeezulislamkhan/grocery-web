@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShakarGanj Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=3">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body class="admin-body">
+
+<!-- DASHBOARD -->
+<div id="adminDashView" class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="abrand"><img src="assets/logo.jpg" alt="logo"><b>ShakarGanj</b></div>
+    <nav class="admin-nav" id="adminNav">
+      <a href="#" data-page="overview" onclick="showAdminPage('overview');return false;">📊 Overview</a>
+      <a href="#" data-page="products" onclick="showAdminPage('products');return false;">🛒 Products</a>
+      <a href="#" data-page="deals" data-req="admin,manager" onclick="showAdminPage('deals');return false;">🏷️ Deal Containers</a>
+      <a href="#" data-page="orders" onclick="showAdminPage('orders');return false;">📦 Orders</a>
+      <a href="#" data-page="analytics" data-req="admin,manager" onclick="showAdminPage('analytics');return false;">📈 Analytics</a>
+      <a href="#" data-page="support" onclick="showAdminPage('support');return false;">💬 Support Inbox</a>
+      <a href="#" data-page="members" data-req="admin" onclick="showAdminPage('members');return false;">👥 Members</a>
+      <a href="#" data-page="settings" data-req="admin" onclick="showAdminPage('settings');return false;">⚙️ Settings</a>
+    </nav>
+    <div class="role-badge">
+      Signed in as<br><b id="sidebarRoleName">—</b>
+      <span id="sidebarRoleDesc"></span>
+    </div>
+
+    <!-- DEALS -->
+    <div class="admin-page" id="page-deals">
+      <div class="admin-topbar"><div><h1>Deals</h1><div class="sub">Create and manage time-limited offers for existing products.</div></div><button class="btn small" onclick="openDealForm()">+ Add Deal</button></div>
+      <div class="panel"><div class="table-toolbar"><select id="dealStatusFilter" onchange="renderAdminDeals()"><option value="all">All statuses</option><option value="active">Active</option><option value="scheduled">Scheduled</option><option value="expired">Expired</option><option value="disabled">Disabled</option></select><span style="font-size:12px;color:var(--ink-soft);" id="dealCount"></span></div><table class="admin-table"><thead><tr><th>Product</th><th>Discount</th><th>Pricing</th><th>Schedule</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminDealsTbody"></tbody></table></div>
+      <div class="panel" id="dealFormPanel" style="display:none;margin-top:16px;"><h3 id="dealFormTitle">Add deal</h3><div class="add-prod-form"><div class="field full"><label>Existing product</label><select id="dealProduct"></select></div><div class="field"><label>Discount type</label><select id="dealType"><option value="percentage">Percentage discount</option><option value="fixed">Fixed amount discount</option></select></div><div class="field"><label>Discount value</label><input type="number" id="dealValue" min="0.01" step="0.01" placeholder="15"></div><div class="field"><label>Start date and time</label><input type="datetime-local" id="dealStart"></div><div class="field"><label>Expiry date and time</label><input type="datetime-local" id="dealEnd"></div><div class="field"><label>Enabled</label><select id="dealEnabled"><option value="1">Enabled</option><option value="0">Disabled</option></select></div><div class="field full" style="display:flex;gap:10px;"><button class="btn" onclick="saveDeal()">Save Deal</button><button class="btn ghost" onclick="closeDealForm()">Cancel</button></div></div></div>
+      <div class="panel campaign-admin-panel"><div class="admin-topbar"><div><h2>Deal Container</h2><div class="sub">Publish and manage the homepage promotional banner.</div></div><button class="btn small" onclick="openCampaignForm()">+ Add Container</button></div><div class="table-toolbar"><span style="font-size:12px;color:var(--ink-soft);" id="campaignCount"></span></div><table class="admin-table"><thead><tr><th>Title</th><th>Description</th><th>Valid Until</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminCampaignsTbody"></tbody></table><div class="panel" id="campaignFormPanel" style="display:none;margin-top:16px;"><h3 id="campaignFormTitle">Publish deal container</h3><div class="add-prod-form"><div class="field full"><label>Title</label><input type="text" id="campaignTitle" placeholder="Ramzan grocery bundles are here"></div><div class="field full"><label>Description</label><textarea id="campaignDescription" rows="3" placeholder="Save on essentials for the whole month."></textarea></div><div class="field full"><label>Valid until</label><input type="datetime-local" id="campaignEnd" required></div><div class="field full" style="display:flex;gap:10px;"><button class="btn" onclick="saveCampaign()">Publish Container</button><button class="btn ghost" onclick="closeCampaignForm()">Cancel</button></div></div></div></div>
+    </div>
+    <div class="logout" onclick="logout()">← Sign out</div>
+  </aside>
+
+  <main class="admin-main">
+    <button class="btn ghost small" id="adminBackBtn" style="margin-bottom:18px;">← Back</button>
+    <!-- OVERVIEW -->
+    <div class="admin-page active" id="page-overview">
+      <div class="admin-topbar">
+        <div><h1>Dashboard Overview</h1><div class="sub">Here's what's happening with your store today.</div></div>
+        <span class="gw-pill sandbox" id="gwPill">Checking gateway…</span>
+      </div>
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card"><div class="lbl">Revenue</div><div class="val">—</div></div>
+        <div class="kpi-card"><div class="lbl">Orders</div><div class="val">—</div></div>
+        <div class="kpi-card"><div class="lbl">Avg. order value</div><div class="val">—</div></div>
+        <div class="kpi-card"><div class="lbl">Customers</div><div class="val">—</div></div>
+      </div>
+      <div class="admin-grid2">
+        <div class="panel"><h3>Revenue — last 14 days</h3><canvas id="overviewChart" height="110"></canvas></div>
+        <div class="panel"><h3>Top selling products</h3><div id="topProductsList"><p class="empty-note">No sales yet.</p></div></div>
+      </div>
+      <div class="panel">
+        <h3>Recent orders</h3>
+        <table class="admin-table" id="recentOrdersTable"></table>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="admin-page" id="page-products">
+      <div class="admin-topbar">
+        <div><h1>Products</h1><div class="sub">Manage your catalog and stock levels.</div></div>
+        <button class="btn small" onclick="openAddProduct()">+ Add Product</button>
+      </div>
+      <div class="panel">
+        <div class="table-toolbar">
+          <input type="text" placeholder="Search products..." oninput="filterAdminProducts(this.value)">
+          <span style="font-size:12px; color:var(--ink-soft);" id="prodCount"></span>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th></th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="adminProductsTbody"></tbody>
+        </table>
+      </div>
+      <div class="panel" id="addProductPanel" style="display:none; margin-top:16px;">
+        <h3>Add new product</h3>
+        <div class="add-prod-form">
+          <div class="field"><label>Product name</label><input type="text" id="npName" placeholder="e.g. Basmati Rice 5kg"></div>
+          <div class="field"><label>Category</label>
+            <select id="npCat"><option>Fruits &amp; Vegetables</option><option>Dairy &amp; Eggs</option><option>Bakery</option><option>Rice, Atta &amp; Pulses</option><option>Beverages</option><option>Household</option><option>Meat &amp; Poultry</option></select>
+          </div>
+          <div class="field"><label>Price (Rs.)</label><input type="number" id="npPrice" placeholder="450"></div>
+          <div class="field"><label>Sale Price (optional)</label><input type="number" id="npSalePrice" min="0" step="0.01" placeholder="e.g. 399"></div>
+          <div class="field"><label>Fresh Tag / Eyebrow (optional)</label><input type="text" id="npTag" maxlength="40" placeholder="e.g. Fresh, New, Bestseller"></div>
+          <div class="field"><label>Stock quantity</label><input type="number" id="npStock" placeholder="100"></div>
+          <div class="field full"><label>Image URL</label><input type="text" id="npImg" placeholder="https://..."></div>
+          <div class="field full" style="display:flex; gap:10px;">
+            <button class="btn" onclick="addProduct()">Save Product</button>
+            <button class="btn ghost" onclick="closeAddProduct()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="editProductPanel" style="display:none; margin-top:16px;">
+        <h3>Edit product</h3>
+        <div class="add-prod-form">
+          <div class="field"><label>Product name</label><input type="text" id="epName" placeholder="e.g. Basmati Rice 5kg"></div>
+          <div class="field"><label>Category</label>
+            <select id="epCat"><option>Fruits &amp; Vegetables</option><option>Dairy &amp; Eggs</option><option>Bakery</option><option>Rice, Atta &amp; Pulses</option><option>Beverages</option><option>Household</option><option>Meat &amp; Poultry</option></select>
+          </div>
+          <div class="field"><label>Price (Rs.)</label><input type="number" id="epPrice" placeholder="450"></div>
+          <div class="field"><label>Sale Price (optional)</label><input type="number" id="epSalePrice" min="0" step="0.01" placeholder="e.g. 399"></div>
+          <div class="field"><label>Fresh Tag / Eyebrow (optional)</label><input type="text" id="epTag" maxlength="40" placeholder="e.g. Fresh, New, Bestseller"></div>
+          <div class="field"><label>Stock quantity</label><input type="number" id="epStock" placeholder="100"></div>
+          <div class="field full"><label>Image URL</label><input type="text" id="epImg" placeholder="https://..."></div>
+          <div class="field full" style="display:flex; gap:10px;">
+            <button class="btn" onclick="saveEditProduct()">Save Changes</button>
+            <button class="btn ghost" onclick="closeEditProduct()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="admin-page" id="page-orders">
+      <div class="admin-topbar"><div><h1>Orders</h1><div class="sub">Track payments and fulfilment status.</div></div></div>
+      <div class="panel"><table class="admin-table" id="ordersTable"></table></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="admin-page" id="page-analytics">
+      <div class="admin-topbar"><div><h1>Analytics</h1><div class="sub">Store performance — Admin &amp; Manager only.</div></div></div>
+      <div class="admin-grid2">
+        <div class="panel"><h3>Sales by category</h3><canvas id="catChart" height="140"></canvas></div>
+        <div class="panel"><h3>Payment method split</h3><canvas id="payChart" height="140"></canvas></div>
+      </div>
+    </div>
+
+    <!-- SUPPORT INBOX -->
+    <div class="admin-page" id="page-support">
+      <div class="admin-topbar"><div><h1>Support Inbox</h1><div class="sub">Questions submitted through the Help &amp; Support widget.</div></div></div>
+      <div class="panel"><table class="admin-table" id="supportTable"></table></div>
+    </div>
+
+    <!-- MEMBERS -->
+    <div class="admin-page" id="page-members">
+      <div class="admin-topbar">
+        <div><h1>Members</h1><div class="sub">Manage employee/staff login credentials.</div></div>
+        <button class="btn small" onclick="openAddMember()">+ Add Member</button>
+      </div>
+      <div class="panel">
+        <div class="table-toolbar">
+          <input type="text" placeholder="Search members..." oninput="filterMembers(this.value)">
+          <span style="font-size:12px; color:var(--ink-soft);" id="memberCount"></span>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="membersTbody"></tbody>
+        </table>
+      </div>
+      <div class="panel" id="addMemberPanel" style="display:none; margin-top:16px;">
+        <h3>Add new member</h3>
+        <div class="add-prod-form">
+          <div class="field"><label>Full name</label><input type="text" id="nmName" placeholder="e.g. John Doe"></div>
+          <div class="field"><label>Email</label><input type="email" id="nmEmail" placeholder="e.g. john@example.com"></div>
+          <div class="field"><label>Password</label><input type="password" id="nmPassword" placeholder="Minimum 8 characters"></div>
+          <div class="field full" style="display:flex; gap:10px;">
+            <button class="btn" onclick="addMember()">Create Member</button>
+            <button class="btn ghost" onclick="closeAddMember()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="admin-page" id="page-settings">
+      <div class="admin-topbar"><div><h1>Settings</h1><div class="sub">Store &amp; payment configuration — Admin only.</div></div></div>
+      <div class="panel">
+        <div class="add-prod-form">
+          <div class="field"><label>Store name</label><input type="text" id="setSName" value="ShakarGanj Grocery Store"></div>
+          <div class="field"><label>Support phone</label><input type="text" id="setPhone" value="+92 300 1234567"></div>
+          <div class="field full"><label>WhatsApp number</label><input type="text" id="setWhatsapp" placeholder="+92 300..."></div>
+          <div class="field full"><label>Bank account (IBAN)</label><input type="text" id="setBankIban" value="PK00 MEZN 0000 0000 1234 567"></div>
+          <div class="field full"><label>Bank name</label><input type="text" id="setBankName" placeholder="e.g. Allied Bank"></div>
+          <div class="field full" style="display:flex; gap:10px; padding-top:8px;">
+            <button class="btn" onclick="saveSettings()">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCESS DENIED TEMPLATE -->
+    <div class="admin-page" id="page-denied">
+      <div class="access-denied"><div class="ic">🔒</div><h2>Restricted area</h2><p>Your role doesn't have access to this section.</p></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js?v=3"></script>
+<script src="js/admin.js?v=3"></script>
+</body>
+</html>
