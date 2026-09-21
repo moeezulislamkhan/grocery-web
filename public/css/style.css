@@ -80,8 +80,8 @@ a{ color:inherit; text-decoration:none; }
 header.site-header{ position:sticky; top:0; z-index:500; background:var(--white); border-bottom:1px solid var(--line); }
 .header-inner{ max-width:1240px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; gap:28px; }
 .brand{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
-.brand .mark{ width:38px; height:38px; border-radius:50%; overflow:hidden; border:1.5px solid var(--maroon-tint); }
-.brand .mark img{ width:100%; height:100%; object-fit:contain; }
+#app .brand .mark{ width:56px; height:48px; padding:0; overflow:visible; }
+.brand .mark img{ display:block; width:145%; height:145%; padding:0; object-fit:contain; }
 .brand .name{ font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:var(--maroon); line-height:1; }
 .brand .name span{ display:block; font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:9.5px; letter-spacing:0.16em; color:var(--ink-soft); margin-top:3px; }
 .searchbar{ flex:1; display:flex; align-items:center; gap:10px; background:var(--paper); border:1.5px solid var(--line); border-radius:999px; padding:11px 18px; max-width:480px; }

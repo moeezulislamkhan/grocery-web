@@ -36,8 +36,10 @@ async function loadCategoryPage() {
   try {
     const url = currentCategory === 'All' ? '/api/products' : `/api/products?category=${encodeURIComponent(currentCategory)}`;
     const { products } = await API.get(url);
-    PRODUCTS = products;
-    document.getElementById('categoryCount').textContent = `${products.length} product${products.length === 1 ? '' : 's'}`;
+    PRODUCTS = currentCategory === 'All'
+      ? products
+      : products.filter(product => product.category === currentCategory);
+    document.getElementById('categoryCount').textContent = `${PRODUCTS.length} product${PRODUCTS.length === 1 ? '' : 's'}`;
     renderCategoryProducts();
     renderCart(); // cart may reference products not in this category — cartLines() below handles that
   } catch (err) {
@@ -72,7 +74,7 @@ function renderFooterShopList() {
 function renderCategoryProducts() {
   const grid = document.getElementById('categoryProductGrid');
   if (PRODUCTS.length === 0) {
-    grid.innerHTML = `<p class="empty-note">No products in this category yet — check back soon, or explore another category above.</p>`;
+    grid.innerHTML = `<p class="empty-note">No products available in this category.</p>`;
     return;
   }
   grid.innerHTML = PRODUCTS.map(p => `
