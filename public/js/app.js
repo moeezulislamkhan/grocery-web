@@ -91,12 +91,15 @@ const CATEGORY_ICONS = {
   'Rice, Atta & Pulses': '🍚', 'Beverages': '🧃', 'Household': '🧴', 'Meat & Poultry': '🍗',
 };
 let PRODUCTS = [];
+let ALL_PRODUCTS = [];
+let searchRequestId = 0;
 function fmt(n) { return 'Rs. ' + Math.round(n).toLocaleString(); }
 
 async function loadProducts() {
   try {
     const { products } = await API.get('/api/products');
     PRODUCTS = products;
+    ALL_PRODUCTS = products;
     renderCategories();
     renderProducts();
     // Cart items are stored by product id in localStorage, but rendering
@@ -109,6 +112,30 @@ async function loadProducts() {
     loadCampaignBanner();
   } catch (err) {
     document.getElementById('productGrid').innerHTML = `<p class="empty-note">Could not load products. Is the server running?</p>`;
+  }
+}
+
+async function searchProducts(value) {
+  const query = value.trim();
+  const requestId = ++searchRequestId;
+  const grid = document.getElementById('productGrid');
+
+  if (!query) {
+    PRODUCTS = ALL_PRODUCTS;
+    renderCategories();
+    renderProducts();
+    return;
+  }
+
+  try {
+    const { products } = await API.get(`/api/products?q=${encodeURIComponent(query)}`);
+    if (requestId !== searchRequestId) return;
+    PRODUCTS = products;
+    renderCategories();
+    renderProducts(true);
+  } catch (err) {
+    if (requestId !== searchRequestId) return;
+    grid.innerHTML = '<p class="empty-note">Search is temporarily unavailable.</p>';
   }
 }
 
@@ -131,8 +158,14 @@ function renderCategories() {
   }
 }
 
-function renderProducts() {
-  document.getElementById('productGrid').innerHTML = PRODUCTS.slice(0, 8).map(p => `
+function renderProducts(showAll = false) {
+  const grid = document.getElementById('productGrid');
+  const products = showAll ? PRODUCTS : PRODUCTS.slice(0, 8);
+  if (products.length === 0) {
+    grid.innerHTML = '<p class="empty-note">No results found.</p>';
+    return;
+  }
+  grid.innerHTML = products.map(p => `
     <div class="p-card">
       ${p.deal ? '<div class="tag sale">DEAL</div>' : (p.has_sale_price ? '<div class="tag sale">SALE</div>' : (p.tag ? `<div class="tag ${p.tag === 'Sale' ? 'sale' : ''}">${p.tag}</div>` : ''))}
       <div class="img-wrap"><img src="${p.image}" alt="${p.name}"></div>
@@ -148,6 +181,9 @@ function renderProducts() {
     </div>
   `).join('');
 }
+
+const productSearchInput = document.getElementById('productSearchInput');
+if (productSearchInput) productSearchInput.addEventListener('input', event => searchProducts(event.target.value));
 
 async function loadCampaignBanner() {
   const banner = document.getElementById('campaignBanner');

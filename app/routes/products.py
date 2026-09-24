@@ -34,7 +34,21 @@ bp = Blueprint('products', __name__, url_prefix='/api/products')
 def list_products():
     db = current_app.get_db()
     category = request.args.get('category')  # optional ?category=Bakery filter, used by category.html
-    if category:
+    search = request.args.get('q', '').strip()
+    if len(search) > 200:
+        return jsonify(error='Search query is too long.'), 400
+
+    if search:
+        pattern = f'%{search}%'
+        products = query_all(
+            db,
+            '''SELECT * FROM products
+               WHERE LOWER(name) LIKE LOWER(?)
+                  OR LOWER(category) LIKE LOWER(?)
+               ORDER BY created_at DESC''',
+            (pattern, pattern),
+        )
+    elif category:
         products = query_all(db, 'SELECT * FROM products WHERE category = ? ORDER BY created_at DESC', (category,))
     else:
         products = query_all(db, 'SELECT * FROM products ORDER BY created_at DESC')
