@@ -102,7 +102,6 @@ async function loadProducts() {
     ALL_PRODUCTS = products;
     renderCategories();
     renderProducts();
-    loadPinkSaltFeature();
     // Cart items are stored by product id in localStorage, but rendering
     // them needs each product's name/price/image from PRODUCTS — which
     // wasn't populated yet if the page's initial renderCart() ran before
@@ -150,7 +149,7 @@ function renderCategories() {
 
   const navInner = document.getElementById('catNavInner');
   if (navInner) {
-    const links = ['<a href="index.html" class="active">All Categories</a>', '<a href="pink-salt.html">Pink Salt</a>'];
+    const links = ['<a href="index.html" class="active">All Categories</a>'];
     cats.forEach(c => links.push('<a href="category.html?name=' + encodeURIComponent(c) + '">' + c + '</a>'));
     navInner.innerHTML = links.join('');
   }
@@ -203,33 +202,6 @@ async function loadCampaignBanner() {
     banner.innerHTML = items.join('');
   } catch (err) {
     /* retain the existing banner fallback copy */
-  }
-}
-
-function pinkSaltProductCardHtml(p) {
-  return '<div class="p-card pink-salt-card"><div class="img-wrap"><img src="' + p.image + '" alt="' + p.name + '"></div><div class="body"><div class="cat-lbl">Pink Salt</div><div class="p-title">' + p.name + '</div><div class="row"><div class="price">' + fmt(p.effective_price || p.price) + '</div><button class="add-btn" onclick="addToCart(' + p.id + ')">+</button></div></div></div>';
-}
-
-async function loadPinkSaltFeature() {
-  const section = document.getElementById('pinkSaltSection');
-  const hero = document.getElementById('pinkSaltHero');
-  if (!section || !hero) return;
-  try {
-    const data = await API.get('/api/pink-salt');
-    if (!data.enabled || !data.settings) {
-      section.style.display = 'none';
-      return;
-    }
-    const products = (data.products || []).slice(0, 3);
-    const sliders = (data.sliders || []).slice(0, 3);
-    const sliderHtml = sliders.length ? sliders.map(slider => '<div class="pink-salt-mini-card"><div class="mini-tag">Featured</div><h4>' + slider.title + '</h4><p>' + (slider.subtitle || slider.description || 'Fresh picks from our Pink Salt collection') + '</p></div>').join('') : '';
-    const heroImage = data.settings.hero_image || 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1200&q=80';
-    hero.innerHTML = '<div class="pink-salt-copy"><div class="eyebrow">Shakarganj Pink Salt</div><h2>' + (data.settings.title || 'Explore Our Pink Salt Collection') + '</h2><p>' + (data.settings.description || 'Discover premium Pink Salt products selected for everyday cooking, gifting and home styling.') + '</p><div class="pink-salt-actions"><a class="btn" href="' + (data.settings.cta_link || 'pink-salt.html') + '">' + (data.settings.cta_text || 'Explore Pink Salt Products') + '</a></div></div><div class="pink-salt-visual" style="background-image:linear-gradient(135deg, rgba(98,0,20,.45), rgba(98,0,20,.12)), url(\'' + heroImage + '\')">' + sliderHtml + '</div>';
-    const productsGrid = products.length ? '<div class="pink-salt-product-row">' + products.map(pinkSaltProductCardHtml).join('') + '</div>' : '';
-    hero.insertAdjacentHTML('beforeend', productsGrid);
-    section.style.display = 'block';
-  } catch (err) {
-    section.style.display = 'none';
   }
 }
 

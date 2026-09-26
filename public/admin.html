@@ -17,7 +17,6 @@
     <nav class="admin-nav" id="adminNav">
       <a href="#" data-page="overview" onclick="showAdminPage('overview');return false;">📊 Overview</a>
       <a href="#" data-page="products" onclick="showAdminPage('products');return false;">🛒 Products</a>
-      <a href="#" data-page="pink-salt" data-req="admin,manager" onclick="showAdminPage('pink-salt');return false;">🌸 Pink Salt</a>
       <a href="#" data-page="deals" data-req="admin,manager" onclick="showAdminPage('deals');return false;">🏷️ Deal Containers</a>
       <a href="#" data-page="orders" onclick="showAdminPage('orders');return false;">📦 Orders</a>
       <a href="#" data-page="analytics" data-req="admin,manager" onclick="showAdminPage('analytics');return false;">📈 Analytics</a>
@@ -110,59 +109,9 @@
           <div class="field"><label>Fresh Tag / Eyebrow (optional)</label><input type="text" id="epTag" maxlength="40" placeholder="e.g. Fresh, New, Bestseller"></div>
           <div class="field"><label>Stock quantity</label><input type="number" id="epStock" placeholder="100"></div>
           <div class="field full"><label>Image URL</label><input type="text" id="epImg" placeholder="https://..."></div>
-          <div class="field full"><label><input type="checkbox" id="epPinkSalt"> Mark as Pink Salt collectible item</label></div>
           <div class="field full" style="display:flex; gap:10px;">
             <button class="btn" onclick="saveEditProduct()">Save Changes</button>
             <button class="btn ghost" onclick="closeEditProduct()">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PINK SALT -->
-    <div class="admin-page" id="page-pink-salt">
-      <div class="admin-topbar">
-        <div><h1>Pink Salt</h1><div class="sub">Manage the dedicated Pink Salt campaign and featured product collection.</div></div>
-      </div>
-      <div class="panel">
-        <h3>Collection settings</h3>
-        <div class="add-prod-form">
-          <div class="field"><label>Enable collection</label><select id="pinkSaltEnabled"><option value="1">Enabled</option><option value="0">Disabled</option></select></div>
-          <div class="field"><label>Heading</label><input type="text" id="pinkSaltTitle" placeholder="Explore Our Pink Salt Collection"></div>
-          <div class="field"><label>Subtitle</label><input type="text" id="pinkSaltSubtitle" placeholder="Our signature range"></div>
-          <div class="field full"><label>Description</label><textarea id="pinkSaltDescription" rows="3"></textarea></div>
-          <div class="field"><label>CTA Text</label><input type="text" id="pinkSaltCtaText" placeholder="Explore Pink Salt Products"></div>
-          <div class="field"><label>CTA Link</label><input type="text" id="pinkSaltCtaLink" placeholder="pink-salt.html"></div>
-          <div class="field full"><label>Hero image URL</label><input type="text" id="pinkSaltHeroImage" placeholder="https://..."></div>
-          <div class="field full" style="display:flex; gap:10px;">
-            <button class="btn" onclick="savePinkSaltSettings()">Save settings</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel" style="margin-top:16px;">
-        <div class="admin-topbar"><div><h2>Featured sliders</h2><div class="sub">Promote key Pink Salt products and seasonal offers.</div></div><button class="btn small" onclick="openPinkSaltSliderForm()">+ Add slider</button></div>
-        <table class="admin-table">
-          <thead><tr><th>Title</th><th>Call to action</th><th>Product</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="pinkSaltSlidersTbody"></tbody>
-        </table>
-      </div>
-      <div class="panel" id="pinkSaltSliderPanel" style="display:none; margin-top:16px;">
-        <h3 id="pinkSaltSliderFormTitle">Add slider</h3>
-        <div class="add-prod-form">
-          <div class="field"><label>Title</label><input type="text" id="psSliderTitle"></div>
-          <div class="field"><label>Subtitle</label><input type="text" id="psSliderSubtitle"></div>
-          <div class="field full"><label>Description</label><textarea id="psSliderDescription" rows="3"></textarea></div>
-          <div class="field"><label>Image URL</label><input type="text" id="psSliderImage"></div>
-          <div class="field"><label>Button text</label><input type="text" id="psSliderButtonText" value="Shop Now"></div>
-          <div class="field"><label>Button URL</label><input type="text" id="psSliderButtonUrl" value="pink-salt.html"></div>
-          <div class="field"><label>Linked product</label><select id="psSliderProduct"><option value="">None</option></select></div>
-          <div class="field"><label>Display order</label><input type="number" id="psSliderOrder" value="0"></div>
-          <div class="field"><label>Active</label><select id="psSliderActive"><option value="1">Active</option><option value="0">Inactive</option></select></div>
-          <div class="field"><label>Start date</label><input type="datetime-local" id="psSliderStart"></div>
-          <div class="field"><label>End date</label><input type="datetime-local" id="psSliderEnd"></div>
-          <div class="field full" style="display:flex; gap:10px;">
-            <button class="btn" onclick="savePinkSaltSlider()">Save slider</button>
-            <button class="btn ghost" onclick="closePinkSaltSliderPanel()">Cancel</button>
           </div>
         </div>
       </div>

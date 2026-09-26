@@ -55,7 +55,6 @@ def create_app():
     from app.routes.settings import bp as settings_bp
     from app.routes.employees import bp as employees_bp
     from app.routes.deals import bp as deals_bp
-    from app.routes.pink_salt import bp as pink_salt_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
@@ -66,7 +65,6 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.register_blueprint(employees_bp)
     app.register_blueprint(deals_bp)
-    app.register_blueprint(pink_salt_bp)
 
     # ---- Serve the frontend (public/) as static files ----------------------
     @app.route('/', defaults={'path': 'index.html'})
@@ -124,59 +122,21 @@ def ensure_schema_compatibility(conn):
         except Exception:
             pass
     if os.environ.get('DB_ENGINE', 'sqlite').lower() == 'mysql':
+        execute(conn, 'DROP TABLE IF EXISTS pink_salt_sliders')
+        execute(conn, 'DROP TABLE IF EXISTS pink_salt_settings')
         try:
-            execute(conn, 'ALTER TABLE products ADD COLUMN is_pink_salt TINYINT(1) NOT NULL DEFAULT 0')
+            execute(conn, 'ALTER TABLE products DROP COLUMN is_pink_salt')
         except Exception:
             pass
+        execute(conn, 'DELETE FROM settings WHERE setting_key = ?', ('pink_salt_home_products',))
     else:
-        try:
-            conn.execute('ALTER TABLE products ADD COLUMN is_pink_salt INTEGER NOT NULL DEFAULT 0')
-            conn.commit()
-        except Exception:
-            pass
-    for table_name in ('pink_salt_settings', 'pink_salt_sliders'):
-        if os.environ.get('DB_ENGINE', 'sqlite').lower() == 'mysql':
-            try:
-                execute(conn, f"CREATE TABLE IF NOT EXISTS {table_name} (id INT PRIMARY KEY AUTO_INCREMENT, is_enabled TINYINT(1) NOT NULL DEFAULT 1, title VARCHAR(255) NOT NULL DEFAULT 'Explore Our Pink Salt Collection', subtitle VARCHAR(255), description TEXT, cta_text VARCHAR(120) NOT NULL DEFAULT 'Explore Pink Salt Products', cta_link VARCHAR(255) NOT NULL DEFAULT 'pink-salt.html', hero_image TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4")
-            except Exception:
-                pass
-        else:
-            try:
-                conn.execute("""CREATE TABLE IF NOT EXISTS pink_salt_settings (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    is_enabled INTEGER NOT NULL DEFAULT 1 CHECK(is_enabled IN (0,1)),
-                    title TEXT NOT NULL DEFAULT 'Explore Our Pink Salt Collection',
-                    subtitle TEXT,
-                    description TEXT,
-                    cta_text TEXT NOT NULL DEFAULT 'Explore Pink Salt Products',
-                    cta_link TEXT NOT NULL DEFAULT 'pink-salt.html',
-                    hero_image TEXT,
-                    created_at TEXT DEFAULT (datetime('now')),
-                    updated_at TEXT DEFAULT (datetime('now'))
-                )""")
-                conn.execute("""CREATE TABLE IF NOT EXISTS pink_salt_sliders (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL,
-                    subtitle TEXT,
-                    description TEXT,
-                    image TEXT,
-                    button_text TEXT NOT NULL DEFAULT 'Shop Now',
-                    button_url TEXT NOT NULL DEFAULT 'pink-salt.html',
-                    product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
-                    display_order INTEGER NOT NULL DEFAULT 0,
-                    is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)),
-                    start_date TEXT,
-                    end_date TEXT,
-                    created_at TEXT DEFAULT (datetime('now')),
-                    updated_at TEXT DEFAULT (datetime('now'))
-                )""")
-                conn.commit()
-            except Exception:
-                pass
-    if query_one(conn, 'SELECT COUNT(*) AS c FROM pink_salt_settings')['c'] == 0:
-        execute(conn, 'INSERT INTO pink_salt_settings (is_enabled, title, subtitle, description, cta_text, cta_link, hero_image) VALUES (?, ?, ?, ?, ?, ?, ?)', (1, 'Explore Our Pink Salt Collection', 'Our signature range', 'Discover premium Pink Salt products selected for everyday cooking, gifting and home styling.', 'Explore Pink Salt Products', 'pink-salt.html', 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1200&q=80'))
-        if hasattr(conn, 'commit'):
-            conn.commit()
+        conn.execute('DROP TABLE IF EXISTS pink_salt_sliders')
+        conn.execute('DROP TABLE IF EXISTS pink_salt_settings')
+        product_columns = {row[1] for row in conn.execute('PRAGMA table_info(products)')}
+        if 'is_pink_salt' in product_columns:
+            conn.execute('ALTER TABLE products DROP COLUMN is_pink_salt')
+        conn.execute('DELETE FROM settings WHERE setting_key = ?', ('pink_salt_home_products',))
+        conn.commit()
     if os.environ.get('DB_ENGINE', 'sqlite').lower() != 'mysql':
         conn.execute("""CREATE TABLE IF NOT EXISTS deals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

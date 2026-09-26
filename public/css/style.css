@@ -168,19 +168,6 @@ nav.catnav{ background:var(--paper); border-bottom:1px solid var(--line); }
 .deal-empty p{ color:var(--ink-soft); font-size:13px; margin:8px 0 18px; }
 .deal-error{ color:#B3261E; text-align:center; padding:30px; }
 .old{ color:var(--ink-soft); text-decoration:line-through; font-size:11.5px; margin-right:6px; }
-.pink-salt-section{ padding-top:24px; }
-.pink-salt-hero{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:24px; background:linear-gradient(135deg, #fff7f9 0%, #fbe7ef 100%); border:1px solid #f1dfe7; border-radius:28px; overflow:hidden; padding:24px; }
-.pink-salt-copy{ padding:16px 8px; display:flex; flex-direction:column; justify-content:center; }
-.pink-salt-copy h2{ font-size:clamp(30px, 4vw, 52px); line-height:1.1; margin-top:8px; }
-.pink-salt-copy p{ margin-top:14px; color:var(--ink-soft); line-height:1.7; max-width:560px; }
-.pink-salt-actions{ margin-top:20px; }
-.pink-salt-visual{ min-height:320px; border-radius:22px; background-size:cover; background-position:center; display:flex; flex-direction:column; justify-content:flex-end; padding:18px; gap:12px; }
-.pink-salt-mini-card{ background:rgba(255,255,255,0.88); backdrop-filter:blur(4px); border-radius:14px; padding:12px 14px; border:1px solid rgba(98,0,20,0.08); }
-.pink-salt-mini-card .mini-tag{ font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--maroon); font-weight:700; }
-.pink-salt-mini-card h4{ margin-top:6px; font-size:18px; }
-.pink-salt-mini-card p{ margin-top:6px; color:var(--ink-soft); font-size:12px; line-height:1.5; }
-.pink-salt-product-row{ margin-top:24px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:18px; }
-.pink-salt-card{ background:#fff; }
 .deal-campaign-list{ display:grid; gap:22px; }
 .deal-campaign-container{ min-height:250px; border-radius:24px; overflow:hidden; background:var(--maroon); color:var(--white); position:relative; display:flex; align-items:center; box-shadow:var(--shadow); }
 .deal-campaign-container.has-image{ background-image:linear-gradient(90deg, rgba(98,0,20,.98) 0%, rgba(98,0,20,.88) 48%, rgba(98,0,20,.2) 100%), var(--campaign-image); background-size:cover; background-position:center; }
