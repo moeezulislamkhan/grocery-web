@@ -311,10 +311,15 @@ async function loadFooterSettings() {
   try {
     const { settings } = await API.get('/api/settings/public');
     const phoneEl = document.getElementById('footerPhone');
+    const emailEl = document.querySelector('[data-setting="email"]');
     const nameEl = document.getElementById('footerStoreName');
     const copyEl = document.getElementById('footerCopyrightName');
     const bankEl = document.getElementById('checkoutBankDetails');
     if (phoneEl && settings.support_phone) phoneEl.textContent = settings.support_phone;
+    if (emailEl && settings.support_email) {
+      emailEl.textContent = settings.support_email;
+      emailEl.href = `mailto:${settings.support_email}`;
+    }
     if (nameEl && settings.store_name) nameEl.textContent = settings.store_name;
     if (copyEl && settings.store_name) copyEl.textContent = settings.store_name;
     if (bankEl) bankEl.textContent = `Account title: ${settings.store_name || 'ShakarGanj Grocery Store'}. Bank: ${settings.bank_name || 'Meezan Bank'}. IBAN: ${settings.bank_iban || 'PK00 MEZN 0000 0000 1234 567'}.`;

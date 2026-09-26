@@ -29,7 +29,7 @@
 
 <!-- ================= STOREFRONT ================= -->
 <div id="app">
-  <div class="topbar">Free delivery on orders above Rs. 2,000 &nbsp;•&nbsp; Pay via JazzCash, Bank Transfer or Cash on Delivery</div>
+  <div class="topbar">Free delivery on orders above Rs. 2,000 &nbsp;•&nbsp; Pay via JazzCash, Bank Transfer or Cash on Delivery &nbsp;•&nbsp; <span data-setting="phone">+92 300 1234567</span></div>
   <header class="site-header">
     <div class="header-inner">
       <div class="brand">
@@ -83,6 +83,10 @@
     <div class="item"><div class="ic">↩️</div><div><b>Easy returns</b><span>On damaged items</span></div></div>
   </div>
 
+  <section class="section pink-salt-section" id="pinkSaltSection" style="display:none;">
+    <div class="pink-salt-hero" id="pinkSaltHero"></div>
+  </section>
+
   <section class="section">
     <div class="section-head"><h2>Shop by Category</h2></div>
     <div class="cat-grid" id="catGrid"><p class="empty-note">Loading categories…</p></div>
@@ -128,7 +132,7 @@
       </div>
       <div>
         <h4>Get in touch</h4>
-        <ul><li id="footerPhone">+92 300 1234567</li><li>orders@shakarganj.pk</li><li>Lahore, Pakistan</li></ul>
+        <ul><li id="footerPhone" data-setting="phone">+92 300 1234567</li><li><a data-setting="email" href="mailto:orders@shakarganj.pk">orders@shakarganj.pk</a></li><li>Lahore, Pakistan</li></ul>
       </div>
     </div>
     <div class="footer-bottom">© 2026 <span id="footerCopyrightName">Shakarganj Grocery Store</span>. All rights reserved.</div>
@@ -203,7 +207,8 @@
 </div>
 
 <script src="js/api.js?v=3"></script>
+<script src="js/site-settings.js?v=2"></script>
 <script src="js/support-widget.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/app.js?v=4"></script>
 </body>
 </html>

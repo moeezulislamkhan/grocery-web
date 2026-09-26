@@ -63,6 +63,7 @@ function enterDashboard(user) {
   loadProducts();
   loadDeals();
   loadCampaigns();
+  loadPinkSaltAdmin();
   loadOrders();
   loadSupport();
   loadSettings();
@@ -240,6 +241,121 @@ function renderAdminDeals() {
     <td class="row-actions"><button onclick="openDealForm(${d.id})">Edit</button><button class="del" onclick="deleteDeal(${d.id})">Delete</button></td>
   </tr>`).join('') || '<tr><td colspan="6" class="empty-note">No deals match this status.</td></tr>';
 }
+
+let PINK_SALT_EDIT_ID = null;
+async function loadPinkSaltAdmin() {
+  try {
+    const { settings, sliders, products } = await API.get('/api/admin/pink-salt');
+    window.PINK_SALT_SLIDERS = sliders || [];
+    window.PINK_SALT_PRODUCTS = products || [];
+    document.getElementById('pinkSaltEnabled').value = settings.is_enabled ? '1' : '0';
+    document.getElementById('pinkSaltTitle').value = settings.title || '';
+    document.getElementById('pinkSaltSubtitle').value = settings.subtitle || '';
+    document.getElementById('pinkSaltDescription').value = settings.description || '';
+    document.getElementById('pinkSaltCtaText').value = settings.cta_text || '';
+    document.getElementById('pinkSaltCtaLink').value = settings.cta_link || '';
+    document.getElementById('pinkSaltHeroImage').value = settings.hero_image || '';
+    const select = document.getElementById('psSliderProduct');
+    const productOptions = (window.PINK_SALT_PRODUCTS || []).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    select.innerHTML = '<option value="">None</option>' + productOptions;
+    const rows = (window.PINK_SALT_SLIDERS || []).map(slider => `
+      <tr>
+        <td>${slider.title}</td>
+        <td>${slider.button_text || 'Shop Now'}</td>
+        <td>${slider.product ? slider.product.name : '—'}</td>
+        <td><span class="pill ${slider.is_active ? 'active' : 'pending'}">${slider.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td class="row-actions"><button onclick="openPinkSaltSliderForm(${slider.id})">Edit</button><button class="del" onclick="deletePinkSaltSlider(${slider.id})">Delete</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="5" class="empty-note">No Pink Salt sliders yet.</td></tr>';
+    document.getElementById('pinkSaltSlidersTbody').innerHTML = rows;
+  } catch (err) {
+    console.error('[admin] Pink Salt dashboard failed to load:', err);
+  }
+}
+function openPinkSaltSliderForm(id = null) {
+  PINK_SALT_EDIT_ID = id;
+  const panel = document.getElementById('pinkSaltSliderPanel');
+  const form = document.getElementById('pinkSaltSliderFormTitle');
+  const select = document.getElementById('psSliderProduct');
+  select.innerHTML = '<option value="">None</option>' + (window.PINK_SALT_PRODUCTS || []).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  const slider = (window.PINK_SALT_SLIDERS || []).find(item => item.id === id) || null;
+  form.textContent = slider ? 'Edit slider' : 'Add slider';
+  if (slider) {
+    document.getElementById('psSliderTitle').value = slider.title || '';
+    document.getElementById('psSliderSubtitle').value = slider.subtitle || '';
+    document.getElementById('psSliderDescription').value = slider.description || '';
+    document.getElementById('psSliderImage').value = slider.image || '';
+    document.getElementById('psSliderButtonText').value = slider.button_text || 'Shop Now';
+    document.getElementById('psSliderButtonUrl').value = slider.button_url || 'pink-salt.html';
+    document.getElementById('psSliderProduct').value = slider.product_id ? String(slider.product_id) : '';
+    document.getElementById('psSliderOrder').value = slider.display_order || 0;
+    document.getElementById('psSliderActive').value = slider.is_active ? '1' : '0';
+    document.getElementById('psSliderStart').value = slider.start_date ? String(slider.start_date).replace(' ', 'T').slice(0, 16) : '';
+    document.getElementById('psSliderEnd').value = slider.end_date ? String(slider.end_date).replace(' ', 'T').slice(0, 16) : '';
+  } else {
+    document.getElementById('psSliderTitle').value = '';
+    document.getElementById('psSliderSubtitle').value = '';
+    document.getElementById('psSliderDescription').value = '';
+    document.getElementById('psSliderImage').value = '';
+    document.getElementById('psSliderButtonText').value = 'Shop Now';
+    document.getElementById('psSliderButtonUrl').value = 'pink-salt.html';
+    document.getElementById('psSliderProduct').value = '';
+    document.getElementById('psSliderOrder').value = 0;
+    document.getElementById('psSliderActive').value = '1';
+    document.getElementById('psSliderStart').value = '';
+    document.getElementById('psSliderEnd').value = '';
+  }
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+function closePinkSaltSliderPanel() {
+  document.getElementById('pinkSaltSliderPanel').style.display = 'none';
+  PINK_SALT_EDIT_ID = null;
+}
+async function savePinkSaltSettings() {
+  const payload = {
+    is_enabled: document.getElementById('pinkSaltEnabled').value === '1',
+    title: document.getElementById('pinkSaltTitle').value.trim(),
+    subtitle: document.getElementById('pinkSaltSubtitle').value.trim(),
+    description: document.getElementById('pinkSaltDescription').value.trim(),
+    cta_text: document.getElementById('pinkSaltCtaText').value.trim(),
+    cta_link: document.getElementById('pinkSaltCtaLink').value.trim(),
+    hero_image: document.getElementById('pinkSaltHeroImage').value.trim(),
+  };
+  try {
+    await API.post('/api/admin/pink-salt', payload);
+    showToast('Pink Salt settings saved.');
+    loadPinkSaltAdmin();
+  } catch (err) { showToast(err.message); }
+}
+async function savePinkSaltSlider() {
+  const body = {
+    title: document.getElementById('psSliderTitle').value.trim(),
+    subtitle: document.getElementById('psSliderSubtitle').value.trim(),
+    description: document.getElementById('psSliderDescription').value.trim(),
+    image: document.getElementById('psSliderImage').value.trim(),
+    button_text: document.getElementById('psSliderButtonText').value.trim(),
+    button_url: document.getElementById('psSliderButtonUrl').value.trim(),
+    product_id: document.getElementById('psSliderProduct').value || null,
+    display_order: Number(document.getElementById('psSliderOrder').value || 0),
+    is_active: document.getElementById('psSliderActive').value === '1',
+    start_date: document.getElementById('psSliderStart').value || '',
+    end_date: document.getElementById('psSliderEnd').value || '',
+  };
+  if (!body.title) { showToast('Slider title is required.'); return; }
+  try {
+    if (PINK_SALT_EDIT_ID) await API.put(`/api/admin/pink-salt/sliders/${PINK_SALT_EDIT_ID}`, body);
+    else await API.post('/api/admin/pink-salt/sliders', body);
+    showToast('Pink Salt slider saved.');
+    closePinkSaltSliderPanel();
+    loadPinkSaltAdmin();
+  } catch (err) { showToast(err.message); }
+}
+async function deletePinkSaltSlider(id) {
+  if (!window.confirm('Delete this Pink Salt slider?')) return;
+  try { await API.delete(`/api/admin/pink-salt/sliders/${id}`); showToast('Pink Salt slider removed.'); loadPinkSaltAdmin(); } catch (err) { showToast(err.message); }
+}
+
 function openDealForm(dealId = null) {
   CURRENT_EDIT_DEAL_ID = dealId;
   const deal = dealId ? ALL_DEALS.find(d => d.id === dealId) : null;
@@ -289,9 +405,10 @@ async function addProduct() {
   const tag = document.getElementById('npTag').value.trim();
   const stock = parseInt(document.getElementById('npStock').value) || 0;
   const image = document.getElementById('npImg').value.trim() || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80';
+  const isPinkSalt = document.getElementById('npPinkSalt').checked;
   if (!name || !price) { showToast('Please enter at least a product name and price.'); return; }
   try {
-    await API.post('/api/products', { name, category, price, salePrice, tag, stock, image });
+    await API.post('/api/products', { name, category, price, salePrice, tag, stock, image, is_pink_salt: isPinkSalt });
     showToast('Product added.');
     closeAddProduct();
     document.getElementById('npName').value = ''; document.getElementById('npPrice').value = ''; document.getElementById('npSalePrice').value = ''; document.getElementById('npTag').value = ''; document.getElementById('npStock').value = ''; document.getElementById('npImg').value = '';
@@ -402,6 +519,7 @@ function openEditProduct(productId) {
   document.getElementById('epTag').value = product.tag || '';
   document.getElementById('epStock').value = product.stock;
   document.getElementById('epImg').value = product.image || '';
+  document.getElementById('epPinkSalt').checked = !!product.is_pink_salt;
   document.getElementById('editProductPanel').style.display = 'block';
   document.getElementById('editProductPanel').scrollIntoView({ behavior: 'smooth' });
 }
@@ -419,9 +537,10 @@ async function saveEditProduct() {
   const tag = document.getElementById('epTag').value.trim();
   const stock = parseInt(document.getElementById('epStock').value) || 0;
   const image = document.getElementById('epImg').value.trim() || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&q=80';
+  const isPinkSalt = document.getElementById('epPinkSalt').checked;
   if (!name || !price) { showToast('Please enter at least a product name and price.'); return; }
   try {
-    await API.put(`/api/products/${CURRENT_EDIT_PRODUCT_ID}`, { name, category, price, salePrice, tag, stock, image });
+    await API.put(`/api/products/${CURRENT_EDIT_PRODUCT_ID}`, { name, category, price, salePrice, tag, stock, image, is_pink_salt: isPinkSalt });
     showToast('Product updated.');
     closeEditProduct();
     loadProducts();
@@ -433,12 +552,10 @@ async function loadSettings() {
   try {
     const { settings } = await API.get('/api/settings');
     if (settings) {
-      document.getElementById('setSName').value = settings.store_name || 'ShakarGanj Grocery Store';
       document.getElementById('setPhone').value = settings.support_phone || '+92 300 1234567';
-      document.getElementById('setWhatsapp').value = settings.whatsapp_number || '';
-      document.getElementById('setBankIban').value = settings.bank_iban || 'PK00 MEZN 0000 0000 1234 567';
-      document.getElementById('setBankName').value = settings.bank_name || '';
+      document.getElementById('setEmail').value = settings.support_email || 'orders@shakarganj.pk';
     }
+    document.getElementById('setTheme').value = sessionStorage.getItem('sg_theme') || 'maroon';
   } catch (err) {
     // If no settings exist yet, that's fine — use defaults
   }
@@ -446,13 +563,12 @@ async function loadSettings() {
 async function saveSettings() {
   try {
     const settingsData = {
-      store_name: document.getElementById('setSName').value || 'ShakarGanj Grocery Store',
       support_phone: document.getElementById('setPhone').value || '+92 300 1234567',
-      whatsapp_number: document.getElementById('setWhatsapp').value || '',
-      bank_iban: document.getElementById('setBankIban').value || '',
-      bank_name: document.getElementById('setBankName').value || ''
+      support_email: document.getElementById('setEmail').value.trim() || 'orders@shakarganj.pk'
     };
     await API.put('/api/settings', settingsData);
+    sessionStorage.setItem('sg_theme', document.getElementById('setTheme').value);
+    applyTemporaryTheme(document.getElementById('setTheme').value);
     showToast('Settings saved successfully.');
   } catch (err) { showToast(err.message); }
 }

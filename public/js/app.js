@@ -102,6 +102,7 @@ async function loadProducts() {
     ALL_PRODUCTS = products;
     renderCategories();
     renderProducts();
+    loadPinkSaltFeature();
     // Cart items are stored by product id in localStorage, but rendering
     // them needs each product's name/price/image from PRODUCTS — which
     // wasn't populated yet if the page's initial renderCart() ran before
@@ -141,21 +142,39 @@ async function searchProducts(value) {
 
 function renderCategories() {
   const cats = [...new Set(PRODUCTS.map(p => p.category))];
-  document.getElementById('catGrid').innerHTML = cats.map(c => `
-    <a class="cat-card" href="category.html?name=${encodeURIComponent(c)}"><div class="emoji">${CATEGORY_ICONS[c] || '🛒'}</div><div class="lbl">${c}</div></a>
-  `).join('');
-  // Top nav bar — built from whatever categories actually exist in the
-  // database right now, so it's always in sync with the Admin Panel
-  // (add/edit/delete a product's category there and this updates itself).
+  const cards = cats.map(c => {
+    const icon = CATEGORY_ICONS[c] || '🛒';
+    return '<a class="cat-card" href="category.html?name=' + encodeURIComponent(c) + '"><div class="emoji">' + icon + '</div><div class="lbl">' + c + '</div></a>';
+  }).join('');
+  document.getElementById('catGrid').innerHTML = cards;
+
   const navInner = document.getElementById('catNavInner');
   if (navInner) {
-    navInner.innerHTML = `<a href="index.html" class="active">All Categories</a>` +
-      cats.map(c => `<a href="category.html?name=${encodeURIComponent(c)}">${c}</a>`).join('');
+    const links = ['<a href="index.html" class="active">All Categories</a>', '<a href="pink-salt.html">Pink Salt</a>'];
+    cats.forEach(c => links.push('<a href="category.html?name=' + encodeURIComponent(c) + '">' + c + '</a>'));
+    navInner.innerHTML = links.join('');
   }
+
   const footerShop = document.getElementById('footerShopList');
   if (footerShop) {
-    footerShop.innerHTML = cats.slice(0, 6).map(c => `<li><a href="category.html?name=${encodeURIComponent(c)}" style="color:inherit;">${c}</a></li>`).join('');
+    const items = cats.slice(0, 6).map(c => '<li><a href="category.html?name=' + encodeURIComponent(c) + '" style="color:inherit;">' + c + '</a></li>');
+    footerShop.innerHTML = items.join('');
   }
+}
+
+function productPriceHtml(p) {
+  if (p.deal || p.has_sale_price) {
+    return '<span class="old">' + fmt(p.price) + '</span>' + fmt(p.effective_price);
+  }
+  const oldPrice = p.old_price ? '<span class="old">' + fmt(p.old_price) + '</span>' : '';
+  return oldPrice + fmt(p.price);
+}
+
+function productCardHtml(p) {
+  const saleTag = p.deal ? '<div class="tag sale">DEAL</div>' : (p.has_sale_price ? '<div class="tag sale">SALE</div>' : (p.tag ? '<div class="tag' + (p.tag === 'Sale' ? ' sale' : '') + '">' + p.tag + '</div>' : ''));
+  const tagHtml = p.tag ? '<div class="product-eyebrow">' + p.tag + '</div>' : '';
+  const disabled = p.stock === 0 ? 'disabled style="opacity:.35;cursor:not-allowed;"' : '';
+  return '<div class="p-card">' + saleTag + '<div class="img-wrap"><img src="' + p.image + '" alt="' + p.name + '"></div><div class="body"><div class="cat-lbl">' + p.category + '</div>' + tagHtml + '<div class="p-title">' + p.name + '</div><div class="row"><div class="price">' + productPriceHtml(p) + '</div><button class="add-btn" onclick="addToCart(' + p.id + ')" ' + disabled + '>+</button></div></div></div>';
 }
 
 function renderProducts(showAll = false) {
@@ -165,21 +184,7 @@ function renderProducts(showAll = false) {
     grid.innerHTML = '<p class="empty-note">No results found.</p>';
     return;
   }
-  grid.innerHTML = products.map(p => `
-    <div class="p-card">
-      ${p.deal ? '<div class="tag sale">DEAL</div>' : (p.has_sale_price ? '<div class="tag sale">SALE</div>' : (p.tag ? `<div class="tag ${p.tag === 'Sale' ? 'sale' : ''}">${p.tag}</div>` : ''))}
-      <div class="img-wrap"><img src="${p.image}" alt="${p.name}"></div>
-      <div class="body">
-        <div class="cat-lbl">${p.category}</div>
-        ${p.tag ? `<div class="product-eyebrow">${p.tag}</div>` : ''}
-        <div class="p-title">${p.name}</div>
-        <div class="row">
-          <div class="price">${p.deal || p.has_sale_price ? `<span class="old">${fmt(p.price)}</span>${fmt(p.effective_price)}` : `${p.old_price ? `<span class="old">${fmt(p.old_price)}</span>` : ''}${fmt(p.price)}`}</div>
-          <button class="add-btn" onclick="addToCart(${p.id})" ${p.stock === 0 ? 'disabled style="opacity:.35;cursor:not-allowed;"' : ''}>+</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  grid.innerHTML = products.map(productCardHtml).join('');
 }
 
 const productSearchInput = document.getElementById('productSearchInput');
@@ -191,12 +196,41 @@ async function loadCampaignBanner() {
   try {
     const { campaigns } = await API.get('/api/deal-campaigns');
     if (!campaigns.length) { banner.style.display = 'none'; return; }
-    banner.innerHTML = campaigns.map(campaign => `
-      <div class="campaign-banner-item"${campaign.image ? ` style="background-image:linear-gradient(90deg, rgba(98,0,20,.96), rgba(98,0,20,.78)), url('${campaign.image}')"` : ''}>
-        <div><div class="eyebrow campaign-banner-badge">${campaign.badge || 'Special Offer'}</div><h3>${campaign.title}</h3><p>${campaign.description}</p></div>
-        <a class="btn" href="${campaign.button_url || 'index.html'}">${campaign.button_text || 'Shop Now'}</a>
-      </div>`).join('');
-  } catch { /* retain the existing banner fallback copy */ }
+    const items = campaigns.map(campaign => {
+      const imageStyles = campaign.image ? ' style="background-image:linear-gradient(90deg, rgba(98,0,20,.96), rgba(98,0,20,.78)), url(\'' + campaign.image + '\')"' : '';
+      return '<div class="campaign-banner-item"' + imageStyles + '><div><div class="eyebrow campaign-banner-badge">' + (campaign.badge || 'Special Offer') + '</div><h3>' + campaign.title + '</h3><p>' + campaign.description + '</p></div><a class="btn" href="' + (campaign.button_url || 'index.html') + '">' + (campaign.button_text || 'Shop Now') + '</a></div>';
+    });
+    banner.innerHTML = items.join('');
+  } catch (err) {
+    /* retain the existing banner fallback copy */
+  }
+}
+
+function pinkSaltProductCardHtml(p) {
+  return '<div class="p-card pink-salt-card"><div class="img-wrap"><img src="' + p.image + '" alt="' + p.name + '"></div><div class="body"><div class="cat-lbl">Pink Salt</div><div class="p-title">' + p.name + '</div><div class="row"><div class="price">' + fmt(p.effective_price || p.price) + '</div><button class="add-btn" onclick="addToCart(' + p.id + ')">+</button></div></div></div>';
+}
+
+async function loadPinkSaltFeature() {
+  const section = document.getElementById('pinkSaltSection');
+  const hero = document.getElementById('pinkSaltHero');
+  if (!section || !hero) return;
+  try {
+    const data = await API.get('/api/pink-salt');
+    if (!data.enabled || !data.settings) {
+      section.style.display = 'none';
+      return;
+    }
+    const products = (data.products || []).slice(0, 3);
+    const sliders = (data.sliders || []).slice(0, 3);
+    const sliderHtml = sliders.length ? sliders.map(slider => '<div class="pink-salt-mini-card"><div class="mini-tag">Featured</div><h4>' + slider.title + '</h4><p>' + (slider.subtitle || slider.description || 'Fresh picks from our Pink Salt collection') + '</p></div>').join('') : '';
+    const heroImage = data.settings.hero_image || 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1200&q=80';
+    hero.innerHTML = '<div class="pink-salt-copy"><div class="eyebrow">Shakarganj Pink Salt</div><h2>' + (data.settings.title || 'Explore Our Pink Salt Collection') + '</h2><p>' + (data.settings.description || 'Discover premium Pink Salt products selected for everyday cooking, gifting and home styling.') + '</p><div class="pink-salt-actions"><a class="btn" href="' + (data.settings.cta_link || 'pink-salt.html') + '">' + (data.settings.cta_text || 'Explore Pink Salt Products') + '</a></div></div><div class="pink-salt-visual" style="background-image:linear-gradient(135deg, rgba(98,0,20,.45), rgba(98,0,20,.12)), url(\'' + heroImage + '\')">' + sliderHtml + '</div>';
+    const productsGrid = products.length ? '<div class="pink-salt-product-row">' + products.map(pinkSaltProductCardHtml).join('') + '</div>' : '';
+    hero.insertAdjacentHTML('beforeend', productsGrid);
+    section.style.display = 'block';
+  } catch (err) {
+    section.style.display = 'none';
+  }
 }
 
 /* ============ CART (persisted in localStorage — a real browser storage use case, not a Claude.ai artifact) ============ */
@@ -394,10 +428,15 @@ async function loadFooterSettings() {
   try {
     const { settings } = await API.get('/api/settings/public');
     const phoneEl = document.getElementById('footerPhone');
+    const emailEl = document.querySelector('[data-setting="email"]');
     const nameEl = document.getElementById('footerStoreName');
     const copyEl = document.getElementById('footerCopyrightName');
     const bankEl = document.getElementById('checkoutBankDetails');
     if (phoneEl && settings.support_phone) phoneEl.textContent = settings.support_phone;
+    if (emailEl && settings.support_email) {
+      emailEl.textContent = settings.support_email;
+      emailEl.href = `mailto:${settings.support_email}`;
+    }
     if (nameEl && settings.store_name) nameEl.textContent = settings.store_name;
     if (copyEl && settings.store_name) copyEl.textContent = settings.store_name;
     if (bankEl) bankEl.textContent = `Account title: ${settings.store_name || 'ShakarGanj Grocery Store'}. Bank: ${settings.bank_name || 'Meezan Bank'}. IBAN: ${settings.bank_iban || 'PK00 MEZN 0000 0000 1234 567'}.`;

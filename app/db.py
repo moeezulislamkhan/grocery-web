@@ -114,6 +114,7 @@ SCHEMA_SQLITE = [
         stock INTEGER NOT NULL DEFAULT 0,
         image TEXT,
         tag TEXT,
+        is_pink_salt INTEGER NOT NULL DEFAULT 0 CHECK(is_pink_salt IN (0,1)),
         created_at TEXT DEFAULT (datetime('now'))
     )""",
     """CREATE TABLE IF NOT EXISTS deals (
@@ -192,6 +193,34 @@ SCHEMA_SQLITE = [
         value TEXT NOT NULL,
         updated_at TEXT DEFAULT (datetime('now'))
     )""",
+    """CREATE TABLE IF NOT EXISTS pink_salt_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        is_enabled INTEGER NOT NULL DEFAULT 1 CHECK(is_enabled IN (0,1)),
+        title TEXT NOT NULL DEFAULT 'Explore Our Pink Salt Collection',
+        subtitle TEXT,
+        description TEXT,
+        cta_text TEXT NOT NULL DEFAULT 'Explore Pink Salt Products',
+        cta_link TEXT NOT NULL DEFAULT 'pink-salt.html',
+        hero_image TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    )""",
+    """CREATE TABLE IF NOT EXISTS pink_salt_sliders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        description TEXT,
+        image TEXT,
+        button_text TEXT NOT NULL DEFAULT 'Shop Now',
+        button_url TEXT NOT NULL DEFAULT 'pink-salt.html',
+        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+        display_order INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)),
+        start_date TEXT,
+        end_date TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    )""",
 ]
 
 SCHEMA_MYSQL = [
@@ -220,6 +249,7 @@ SCHEMA_MYSQL = [
         stock INT NOT NULL DEFAULT 0,
         image TEXT,
         tag VARCHAR(40),
+        is_pink_salt TINYINT(1) NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",
     """CREATE TABLE IF NOT EXISTS deals (
@@ -301,5 +331,32 @@ SCHEMA_MYSQL = [
         setting_key VARCHAR(255) PRIMARY KEY,
         value LONGTEXT NOT NULL,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",    """CREATE TABLE IF NOT EXISTS pink_salt_settings (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        is_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        title VARCHAR(255) NOT NULL DEFAULT 'Explore Our Pink Salt Collection',
+        subtitle VARCHAR(255),
+        description TEXT,
+        cta_text VARCHAR(120) NOT NULL DEFAULT 'Explore Pink Salt Products',
+        cta_link VARCHAR(255) NOT NULL DEFAULT 'pink-salt.html',
+        hero_image TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",
-]
+    """CREATE TABLE IF NOT EXISTS pink_salt_sliders (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        title VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(255),
+        description TEXT,
+        image TEXT,
+        button_text VARCHAR(120) NOT NULL DEFAULT 'Shop Now',
+        button_url VARCHAR(255) NOT NULL DEFAULT 'pink-salt.html',
+        product_id INT NULL,
+        display_order INT NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        start_date DATETIME NULL,
+        end_date DATETIME NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4""",]
